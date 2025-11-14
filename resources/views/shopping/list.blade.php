@@ -5,36 +5,75 @@
 
 {{-- メインコンテンツ --}}
 @section('contents')
-        <h1>「買うもの」登録(未実装)</h1>
-            <form action="./top.html" method="post">
-                タスク名:<input><br>
-                期限:<input type="date"><br>
-                タスク詳細:<textarea></textarea><br>
-                重要度:<label><input type="radio" name="priority">低い</label> / 
-                    <label><input type="radio" name="priority" checked>普通</label> / 
-                    <label><input type="radio" name="priority">高い</label><br>
+        <h1>「買うもの」登録</h1>
+        @if (session('front.shopping_register_success') == true)
+                「買うもの」を登録しました！！<br>
+        @endif
+        @if (session('front.shopping_delete_success') == true)
+                「買うもの」を削除しました！！<br>
+        @endif
+        @if (session('front.shopping_completed_success') == true)
+                「買うもの」を完了にしました！！<br>
+        @endif
+        @if (session('front.shopping_completed_failure') == true)
+                「買うもの」の完了に失敗しました....<br>
+        @endif
+
+        @if ($errors->any())
+            <div>
+            @foreach ($errors->all() as $error)
+                {{ $error }}<br>
+            @endforeach
+            </div>
+        @endif
+            <form action="/shopping/register" method="post">
+                @csrf
+                「買うもの」名:<input type="text" name="name" value="{{ old('name') }}"><br>
                 <button>「買うもの」を登録する</button>
             </form>
 
-        <h1>「買うもの」一覧(未実装)</h1>
+        <h1>「買うもの」一覧</h1>
+        <a href="/completed_shopping_list/list">購入済み「買うもの」一覧</a><br>
         <table border="1">
         <tr>
-            <th>タスク名
-            <th>期限
-            <th>重要度
+            <th>登録日
+            <th>「買うもの」名
+        @foreach ($list as $shopping)
         <tr>
-            <td>HTML formの学習
-            <td>2022/01/01
-            <td>普通
-            <td><a href="./detail.html">詳細閲覧</a>
-            <td><a href="./edit.html">編集</a>
-            <td><form action="./top.html"><button>完了</button></form>
+            <td>{{ $shopping->created_at->format('Y/m/d') }}
+            <td>{{ $shopping->name }}
+            <td><form action="{{ route('complete', ['shopping_id' => $shopping->id]) }}" method="post">
+                     @csrf 
+                     <button onclick='return confirm("この「買うもの」を「完了」にします。よろしいですか？");' >完了</button>
+                </form>
+            <td>&nbsp;&nbsp;
+            <td><form action="{{ route('delete', ['shopping_id' => $shopping->id]) }}" method="post">
+                    @csrf
+                    @method("DELETE")
+                    <button onclick='return confirm("この「買うもの」を「削除」します。よろしいですか？");'>削除</button>
+                </form>
+        @endforeach
         </table>
         <!-- ページネーション -->
-        現在 1 ページ目<br>
-        <a href="./top.html">最初のページ(未実装)</a> / 
-        <a href="./top.html">前に戻る(未実装)</a> / 
-        <a href="./top.html">次に進む(未実装)</a>
+        {{-- {{ $list->links() }} --}}
+        現在 {{ $list->currentPage() }} ページ目<br>
+        @if ($list->onFirstPage() === false)
+        <a href="/shopping/list">最初のページ</a>
+        @else
+        最初のページ
+        @endif
+        / 
+        @if ($list->previousPageUrl() !== null)
+            <a href="{{ $list->previousPageUrl() }}">前に戻る</a>
+        @else
+            前に戻る
+        @endif
+        / 
+        @if ($list->nextPageUrl() !== null)
+            <a href="{{ $list->nextPageUrl() }}">次に進む</a>
+        @else
+            次に進む
+        @endif
         <br>
         <hr>
         <menu label="リンク">
